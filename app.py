@@ -164,9 +164,12 @@ def Transilien():
     webbrowser.open("http://127.0.0.1:8080/")
     app.run(debug=True ,port=8080,use_reloader=False,threaded=True) """
 
-if __name__ == '__main__':
+""" if __name__ == '__main__':
     import webbrowser
     webbrowser.open("http://127.0.0.1:8080/")
 
     from werkzeug.serving import run_simple
-    run_simple('localhost', 8080, app)
+    run_simple('localhost', 8080, app) """
+
+if __name__ == '__main__':
+    app.run(threaded=True)

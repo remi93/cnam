@@ -241,8 +241,8 @@ def stats_descriptives(data):
     Resultats["maximum"]=numpy.round(m1,4)
     Resultats["moyenne"]=numpy.round(m,4)
     Resultats["variance"]=numpy.round(sigma2,4)
-    Resultats["gamma1"]=numpy.round(gamma1,4)
-    Resultats["gamma2"]=numpy.round(gamma2,4)
+    Resultats["coefficient d'asymétrie (skewness)"]=numpy.round(gamma1,4)
+    Resultats["coefficient d’aplatissement (kurtosis)"]=numpy.round(gamma2,4)
     
     return Resultats
     
