@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <title>Mod&eacute;lisation statistique - R&eacute;gularit&eacute; Transilien</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel='shortcut icon' href='https://img.magnific.com/photos-premium/pi-numero-or-symbole-mathematique-illustration-rendu-3d_585146-117.jpg'/>
+
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap_V522.min.css') }}">
+
+  <script src="{{ url_for('static', filename='js/jquery-3.7.1.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap_V502.bundle.min.js') }}"></script>
+
+  <script>
+  $(document).ready(function(){
+      $("#myTab a").click(function(e){
+          e.preventDefault();
+          $(this).tab("show");
+      });
+  });
+  </script>
+
+  <script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    jax: ["input/TeX", "output/HTML-CSS"],
+    extensions: ["tex2jax.js"],
+    "HTML-CSS": { preferredFont: "TeX", availableFonts: ["STIX","TeX"] },
+    tex2jax: { inlineMath: [ ["$", "$"], ["\\(","\\)"] ], displayMath: [ ["$$","$$"], ["\\[", "\\]"] ], processEscapes: true, ignoreClass: "tex2jax_ignore|dno" },
+    TeX: { noUndefined: { attributes: { mathcolor: "red", mathbackground: "#FFEEEE", mathsize: "90%" } } },
+    messageStyle: "none"
+  });
+  </script>
+
+  <!-- Pour formules maths -->
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=default'></script>
+
+  <style>
+    /* ===== Palette SNCF carmillon ===== */
+    :root {
+        --carmillon: #CD2027;
+        --carmillon-dark: #A6191F;
+        --carmillon-light: #FCE9EA;
+    }
+
+    body {
+        background-color: #f5f7fa;
+        font-family: 'Calibri', 'Verdana', 'Segoe UI', Tahoma, Geneva, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    /* On surcharge toutes les polices fantaisistes du fichier d'origine */
+    p, h1, h2, h3, h4, h5, h6, div, span, td, th, label, button, input, select {
+        font-family: 'Calibri', 'Verdana', 'Segoe UI', Tahoma, Geneva, sans-serif !important;
+    }
+
+    /* ===== Bandeau logos du haut ===== */
+    .top-bar {
+        background: #fff;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 12px 0;
+    }
+    .top-bar .logo-img { height: 55px; width: auto; }
+    .top-bar .author-info { text-align: center; }
+    .top-bar .author-info .title {
+        font-size: 1rem;
+        color: var(--carmillon-dark);
+        font-weight: 700;
+        line-height: 1.2;
+    }
+    .top-bar .author-info .author {
+        font-size: 0.85rem;
+        color: #555;
+        margin-top: 3px;
+    }
+
+    /* ===== Navbar carmillon ===== */
+    .navbar-sncf {
+        background: linear-gradient(135deg, var(--carmillon-dark) 0%, var(--carmillon) 100%);
+        padding: 12px 0;
+    }
+    .navbar-sncf .navbar-brand {
+        color: #fff;
+        font-weight: 600;
+        font-size: 1.15rem;
+        padding-left: 15px;
+    }
+
+    /* ===== Onglets principaux (nav-pills) ===== */
+    .nav-pills .nav-link {
+        color: #555;
+        font-weight: 500;
+        border-radius: 6px;
+        margin-right: 5px;
+        padding: 10px 18px;
+        transition: all 0.15s;
+    }
+    .nav-pills .nav-link:hover {
+        background-color: var(--carmillon-light);
+        color: var(--carmillon-dark);
+    }
+    .nav-pills .nav-link.active {
+        background-color: var(--carmillon) !important;
+        color: #fff !important;
+        font-weight: 600;
+    }
+
+    /* Eviter heritage du carmillon sur les sous-onglets de chaque loi */
+    .tab-content .nav-pills .nav-link.active {
+        background-color: var(--carmillon-dark) !important;
+    }
+
+    /* ===== Habillage des tableaux de saisie (formulaires Beta/Gamma/Weibull) ===== */
+    table.TableCellule-table {
+        margin: 20px 0;
+    }
+    .TableCellule {
+        border: 1px solid #ccc;
+        border-collapse: collapse;
+        padding: 12px 18px;
+        font-size: 16px;
+        background-color: #fff;
+    }
+    .TableCellule input[type="text"] {
+        padding: 6px 10px;
+        border: 1px solid #ced4da;
+        border-radius: 4px;
+        font-size: 14px;
+        width: 100%;
+        max-width: 200px;
+    }
+    .TableCellule input[type="text"]:focus {
+        outline: none;
+        border-color: var(--carmillon);
+        box-shadow: 0 0 0 0.2rem rgba(205, 32, 39, 0.20);
+    }
+    .TableCellule button[type="submit"] {
+        background-color: var(--carmillon);
+        color: #fff;
+        border: none;
+        padding: 8px 22px;
+        font-weight: 600;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.15s;
+    }
+    .TableCellule button[type="submit"]:hover {
+        background-color: var(--carmillon-dark);
+    }
+
+    /* ===== Bouton primary Bootstrap ===== */
+    .btn-primary {
+        background-color: var(--carmillon);
+        border-color: var(--carmillon);
+    }
+    .btn-primary:hover, .btn-primary:focus, .btn-primary:active {
+        background-color: var(--carmillon-dark) !important;
+        border-color: var(--carmillon-dark) !important;
+    }
+
+    /* ===== Polices ===== */
+    .pfont1 { font-size: 15pt; font-weight: bold; }
+    .pfont2 { font-size: 13pt; }
+    .pfont3 { font-size: 14pt; }
+
+    /* ===== Citation a gauche ===== */
+    .vl {
+        border-left: 6px solid var(--carmillon);
+        height: auto;
+        padding-left: 20px;
+    }
+
+    /* ===== Cartouche d'avertissement (encadre powderblue d'origine) ===== */
+    .cartouche-info {
+        font-size: 14pt;
+        font-weight: bolder;
+        border-radius: 12px;
+        border: 2px solid var(--carmillon);
+        background-color: var(--carmillon-light);
+        color: var(--carmillon-dark);
+        padding: 18px 25px;
+        margin: 20px 0;
+        max-width: 850px;
+    }
+
+    /* ===== H1 / H2 / H4 ===== */
+    h1, h2 {
+        color: var(--carmillon-dark);
+        font-weight: 700;
+    }
+    h4 {
+        color: var(--carmillon-dark);
+        font-weight: 600;
+    }
+
+    /* ===== Footer ===== */
+    footer {
+        margin-top: 50px;
+        padding: 22px 0;
+        background: var(--carmillon-dark);
+        color: #ffd9d9;
+        text-align: center;
+        font-size: 0.9rem;
+    }
+    footer .author { color: #fff; font-weight: 600; }
+
+    /* ===== Conteneur de contenu principal ===== */
+    .main-content {
+        background: #fff;
+        margin: 20px auto;
+        padding: 30px 35px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        max-width: 1300px;
+    }
+
+    /* ===== Liens de contact / source de donnees ===== */
+    a {
+        color: var(--carmillon);
+    }
+    a:hover {
+        color: var(--carmillon-dark);
+    }
+    /* ===== Overlay de chargement ===== */
+    #loading-overlay {
+        display: none;
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(255, 255, 255, 0.85);
+        z-index: 9999;
+        text-align: center;
+    }
+    #loading-overlay .loading-box {
+        position: absolute;
+        top: 45%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+    #loading-overlay .spinner {
+        width: 70px;
+        height: 70px;
+        margin: 0 auto 20px auto;
+        border: 8px solid var(--carmillon-light);
+        border-top: 8px solid var(--carmillon);
+        border-radius: 50%;
+        animation: spin 0.9s linear infinite;
+    }
+    @keyframes spin {
+        0%   { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    #loading-overlay .progress-track {
+        width: 280px;
+        height: 10px;
+        background: var(--carmillon-light);
+        border-radius: 6px;
+        overflow: hidden;
+        margin: 0 auto;
+    }
+    #loading-overlay .progress-bar-anim {
+        width: 40%;
+        height: 100%;
+        background: var(--carmillon);
+        border-radius: 6px;
+        animation: slide 1.2s ease-in-out infinite;
+    }
+    @keyframes slide {
+        0%   { margin-left: -40%; }
+        100% { margin-left: 100%; }
+    }
+    #loading-overlay .loading-text {
+        margin-top: 18px;
+        color: var(--carmillon-dark);
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+  </style>
+
+</head>
+<body>
+
+<!-- ===== Bandeau logos en haut ===== -->
+<div class="top-bar">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-4 text-start ps-4">
+                <img src="{{ url_for('static', filename='images/Logo_CNAM.png') }}"
+                     alt="Le Cnam - Ecole d'ingenieurs" class="logo-img">
+            </div>
+            <div class="col-4 author-info">
+                <div class="title">Projet de mod&eacute;lisation du taux de r&eacute;gularit&eacute; Transilien</div>
+                <div class="author">Christophe DOS SANTOS FREIRE &amp; R&eacute;mi GUITTARD</div>
+            </div>
+            <div class="col-4 text-end pe-4">
+                <img src="{{ url_for('static', filename='images/Logo_SNCF.png') }}"
+                     alt="SNCF R&eacute;seau" class="logo-img">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Navbar carmillon ===== -->
+<nav class="navbar navbar-sncf">
+    <div class="container-fluid">
+        <span class="navbar-brand">
+            &#128646; Ponctualit&eacute; mensuelle Transilien &mdash; Lois tronqu&eacute;es asym&eacute;triques
+        </span>
+    </div>
+</nav>
+
+<!-- ===== Contenu principal ===== -->
+<div class="main-content">
+
+<div class="m-2">
+    <ul class="nav nav-pills" id="myTab">
+
+        <li class="nav-item">
+            <a href="#home" class="nav-link active">Accueil</a>
+        </li>
+
+        <!-- Loi Beta -->
+        <li class="nav-item">
+            <a href="#LoiBeta" class="nav-link">Loi Beta tronqu&eacute;e</a>
+        </li>
+
+        <!-- Loi Gamma -->
+        <li class="nav-item">
+            <a href="#LoiGamma" class="nav-link">Loi Gamma tronqu&eacute;e</a>
+        </li>
+
+        <!-- Loi de Weibull -->
+        <li class="nav-item">
+            <a href="#LoiWeibull" class="nav-link">Loi de Weibull tronqu&eacute;e</a>
+        </li>
+
+        <!-- Application -->
+        <li class="nav-item">
+            <a href="#Application" class="nav-link">Application </a>
+        </li>
+
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="home">
+
+        <br>
+        <div class="vl" style="padding-top:10pt;">
+            <p style="font-size: 15pt; text-align: justify;">
+            <strong>Christophe DOS SANTOS FREIRE &amp; R&eacute;mi GUITTARD</strong></p>
+
+            <p style="margin-bottom: 4px;">
+                <a style="text-decoration:none;" href="mailto:christophe.dos-santos-freire@reseau.sncf.fr">
+                christophe.dos-santos-freire@reseau.sncf.fr
+                </a>
+            </p>
+            <p>
+                <a style="text-decoration:none;" href="mailto:remi.guittard@reseau.sncf.fr">
+                remi.guittard@reseau.sncf.fr
+                </a>
+            </p>
+
+            <br>
+            <p class="pfont3">Formation : Dipl&ocirc;me d'ing&eacute;nieur Sp&eacute;cialit&eacute; syst&egrave;mes &eacute;lectroniques parcours Signalisation ferroviaire en apprentissage (CNAM)</p>
+        </div>
+
+        <hr>
+
+        <div class="vl">
+            <p style="font-size: 15pt; text-align: justify;">
+            Ce travail a &eacute;t&eacute; r&eacute;alis&eacute; dans le cadre du projet de mod&eacute;lisation de troisi&egrave;me ann&eacute;e de l'&eacute;cole d'ing&eacute;nieur au Conservatoire National des Arts et M&eacute;tiers (CNAM),
+            sous la direction de <i style="font-weight: bold;">Dariush GHORBANZADEH</i>, entre janvier 2026 et juin 2026.
+            </p>
+        </div>
+
+        <hr>
+        <br>
+
+        <h4 class="mt-2">Ponctualit&eacute; mensuelle Transilien</h4>
+        <br>
+        <p>
+            <a style="text-decoration: none;" class="pfont1"
+            href="https://data.sncf.com/explore/dataset/ponctualite-mensuelle-transilien/information/"
+            target="_blank">
+            &#9755; Source de donn&eacute;es</a>
+        </p>
+
+        <h4 class="mt-2 pfont1">Ponctualit&eacute; mensuelle Transilien depuis janvier 2013.</h4>
+
+        <p class="pfont2">Sur Transilien, la qualit&eacute; de service est &eacute;valu&eacute;e au regard de la "ponctualit&eacute; voyageurs", c'est-&agrave;-dire le pourcentage de voyageurs arrivant avec un retard de moins de cinq minutes &agrave; leur gare de destination.
+        </p>
+
+        <p class="pfont2">Depuis janvier 2002, en accord avec &Icirc;le-de-France Mobilit&eacute;s (IDFM) - anciennement Syndicat des transports d'Ile-de-France (STIF) - qui est l'autorit&eacute; organisatrice des transports pour Transilien, le mode de calcul ne s'effectue plus sur la base du nombre de trains mais du nombre de voyageurs impact&eacute;s. L'objectif est de refl&eacute;ter la r&eacute;alit&eacute; du parcours de chaque voyageur. Pour chaque train supprim&eacute; ou retard&eacute; de plus de cinq minutes, il est donc possible de conna&icirc;tre le nombre de voyageurs qui sont impact&eacute;s par une perturbation.</p>
+
+        <p class="pfont2">Pour r&eacute;aliser ce calcul, des agents mandat&eacute;s par IDFM et Transilien r&eacute;alisent des comptages permettant de conna&icirc;tre le nombre d'entrants et de descendants dans les gares, et cela pour tous les trains au cours de la semaine. Ces donn&eacute;es sont actualis&eacute;es en fonction des donn&eacute;es transmises par les portiques de contr&ocirc;le.</p>
+
+        <p class="pfont1"><b>NB :</b> Du fait de la gr&egrave;ve nationale, la ponctualit&eacute; des mois de d&eacute;cembre 2019 et de janvier 2020 n'a pas &eacute;t&eacute; prise en compte.</p>
+
+        <!--  Description du modele -->
+        <br>
+
+        <hr style="height:3px;border-width:0;color:gray;background-color:gray">
+        <br>
+
+        <h2>Mise en place de lois asym&eacute;triques &agrave; supports born&eacute;s</h2>
+        <br>
+
+        <div>
+            <p class="pfont2">Dans le cadre de la construction des lois asym&eacute;triques &agrave; supports born&eacute;s, on consid&egrave;re
+            une variable al&eacute;atoire r&eacute;elle $X$ dont la loi admet la densit&eacute; $f_{X}$ et fonction de r&eacute;partition $F_{X}$.</p>
+            <p class="pfont2">Dans la suite, on utilisera la loi de $X$ comme la loi de base.</p>
+            <p class="pfont2">
+            En se basant sur $X$, on &eacute;tablit la variable born&eacute;e $Y$, qui est d&eacute;finie par :
+            $\displaystyle Y= X\,1_{[0,1]}(X)$.</p>
+            <p class="pfont2">La <b>fonction de r&eacute;partition de la loi de $Y$</b> est d&eacute;finie par :
+             $$\displaystyle \begin{array}{ll} F_Y(y) & =\displaystyle  \mathbb{P}(Y\leq y)=\mathbb{P}\big(X\leq y \mid X\in[0,1] \big) \\[.2cm]& =\displaystyle  \frac{\mathbb{P}\big(X\leq y \, \cap \, X\in[0,1] \big)}{\mathbb{P}\big( X\in[0,1] \big)} =\frac{F_{X}(y)}{F_X(1)-F_X(0)} \end{array}$$
+            et la <b>densit&eacute; de la loi de $Y$</b> est d&eacute;finie par :
+            $$\displaystyle f_Y(y)=F_Y^{\prime}(y)=\frac{f_{X}(y)}{F_{X}(1)-F_{X}(0)} \,\, 1_{[0,1]}(y)$$
+            </p>
+
+            <p class="pfont1">Asym&eacute;trie &agrave; gauche</p>
+            <p class="pfont2">Pour construire les lois d'asym&eacute;trie &agrave; gauche, on utilise la transformation :
+             $$\displaystyle 𝑍=\alpha+\lambda (\beta−\alpha)𝑌 \,\,\,, \,\,\  \lambda >0$$
+            </p>
+            <p class="pfont2">La <b>fonction de r&eacute;partition de la loi de $Z$</b> est d&eacute;finie par :
+            $$\displaystyle  F_{Z}(z)=\mathbb{P}(Z\leq z)=\mathbb{P}\big(𝛼+\lambda(𝛽−𝛼)𝑌\leq z \big) =\mathbb{P}\big( Y\leq \frac{z-\alpha}{\lambda(\beta-\alpha)} \big) =F_{Y}\big( \frac{z-\alpha}{\lambda(\beta-\alpha)} \big)$$
+            et la <b>densit&eacute; de la loi de $Z$</b> est d&eacute;finie par :
+            $$\displaystyle  f_{Z}(z)=F_{Z}^{\prime}(z)=\frac{1}{\lambda(\beta-\alpha)}\,f_{Y}\big( \frac{z-\alpha}{\lambda(\beta-\alpha)} \big)  \,\,1_{[\alpha , \alpha +\lambda (\beta−\alpha)]}(z)$$
+            </p>
+
+            <p class="pfont1">Asym&eacute;trie &agrave; droite</p>
+            <p class="pfont2">Pour construire les lois d'asym&eacute;trie &agrave; droite, on utilise la transformation :
+             $$\displaystyle 𝑊=\beta−\lambda (\beta−\alpha)𝑌 \,\,\,, \,\,\  \lambda >0$$
+            </p>
+            <p class="pfont2">La <b>fonction de r&eacute;partition de la loi de $W$</b> est d&eacute;finie par :
+            $$\displaystyle  F_{W}(w)=\mathbb{P}(W\leq w)=\mathbb{P}\big( \beta−\lambda(\beta−\alpha)𝑌\leq w \big) =\mathbb{P}\big( Y\geq \frac{\beta-w}{\lambda(\beta−\alpha)} \big) =1-F_{Y}\big( \frac{\beta- w}{\lambda(\beta−\alpha)} \big)$$
+            et la <b>densit&eacute; de la loi de $W$</b> est d&eacute;finie par :
+            $$\displaystyle  f_{W}(w)=F_{W}^{\prime}(w)=\frac{1}{\lambda(\beta−\alpha)}\,f_{Y}\big( \frac{\beta-w}{\lambda(\beta−\alpha)} \big)  \,\,1_{[\beta−\lambda (\beta−\alpha) , \beta]}(w)$$
+            </p>
+        </div>
+
+        <h2>Estimation des param&egrave;tres</h2>
+        <br>
+
+        <div>
+            <p style="font-size: 14pt;font-weight: bold;">
+            La m&eacute;thode du maximum de vraisemblance est utilis&eacute;e pour estimer les param&egrave;tres de chaque mod&egrave;le (asym&eacute;trie &agrave; gauche ou &agrave; droite).
+            </p>
+            <p class="pfont2">
+            Soit $X_{1}, \ldots , X_{n}$ un &eacute;chantillon. On d&eacute;finit la vraisemblance associ&eacute;e par :
+            </p>
+
+            <p class="pfont1">Asym&eacute;trie &agrave; gauche</p>
+            <p class="pfont1">
+             $$\displaystyle L_G(\theta)=\prod\limits_{i=1}^{n}  f_{Z}(x_{i}) =\big(\frac{1}{\lambda(\beta-\alpha)}\big)^{n}\,\prod\limits_{i=1}^{n} f_{Y}\big( \frac{x_{i}-\alpha}{\lambda(\beta-\alpha)} \big)$$
+             </p>
+            <p class="pfont2">
+             $\displaystyle f_{Z}$ &eacute;tant d&eacute;finie sur l'intervalle $\displaystyle [\alpha , \alpha +\lambda (\beta−\alpha)]$.
+
+             on prend $\displaystyle \alpha= min(data)$ et du fait que le taux de ponctualit&eacute; ait une variation born&eacute;e par 100 %, ceci impose la contrainte  $\displaystyle \alpha +\lambda (\beta−\alpha)=min(data) +\lambda (\beta−min(data))=100$.
+            <br> <br>
+             On en d&eacute;duit une relation entre $\displaystyle \lambda$ et  $\displaystyle \beta$,  soit $\displaystyle \lambda=\frac{100-min(data)}{\beta−min(data)}$.
+            <br> <br>
+             Le param&egrave;tre de ce mod&egrave;le est donc $\displaystyle \theta=\big(a, b, \beta \big)$. $\displaystyle \hat{\theta}=Arg\, \underset{\theta}{max} \, \ell_G(\theta)$ o&ugrave; $\displaystyle \ell_G(\theta)= log\big(L_G(\theta)\big)$
+            </p>
+
+            <p class="pfont1">Asym&eacute;trie &agrave; droite</p>
+
+            <p class="pfont1">
+             $$\displaystyle L_D(\theta)=\prod\limits_{i=1}^{n}  f_{W}(x_{i}) =\big(\frac{1}{\lambda(\beta-\alpha)}\big)^{n}\,\prod\limits_{i=1}^{n} f_{Y}\big( \frac{\beta-x_{i}}{\lambda(\beta-\alpha)} \big)$$
+            </p>
+            <p class="pfont2">
+             $\displaystyle f_{W}$ &eacute;tant d&eacute;finie sur l'intervalle  $\displaystyle [\beta−\lambda (\beta−\alpha) , \beta]$.
+
+             Du fait que le taux de ponctualit&eacute; ait une variation born&eacute;e par 100 %, on prend $\displaystyle \beta=100 $.   Pour la borne inf&eacute;rieur de l'intervalle on a la contrainte  $\displaystyle \beta−\lambda (\beta−\alpha)=100−\lambda (100−\alpha)=min(data)$
+            <br> <br>
+             On en d&eacute;duit une relation entre $\displaystyle \lambda$ et  $\displaystyle \alpha$,  soit $\displaystyle \lambda=\frac{100-min(data)}{100−\alpha}$.
+            <br> <br>
+             Le param&egrave;tre de ce mod&egrave;le est donc $\displaystyle \theta=\big(a, b, \alpha \big)$. $\displaystyle \hat{\theta}=Arg\, \underset{\theta}{max} \, \ell_D(\theta)$  o&ugrave; $\displaystyle \ell_D(\theta)= log\big(L_D(\theta)\big)$
+            </p>
+        </div>
+
+        <br>
+
+        <div class="cartouche-info">
+            <p style="padding: 0;">
+             &#9888;&#65039; Pour choisir parmi plusieurs lois de base, il faut comparer les vraisemblances correspondantes.
+            </p>
+        </div>
+
+        <!-- Fin Description du modele -->
+
+        </div>
+
+        <!-- Loi Beta -->
+        <div class="tab-pane fade" id="LoiBeta">
+            <br>
+            <h4 class="mt-2">Loi Beta tronqu&eacute;e</h4>
+            <br>
+
+            <div class="m-4">  <!-- debut div formulaire Beta -->
+
+            <ul class="nav nav-pills" id="myTab">
+                <li class="nav-item">
+                    <a href="#BetaGauche" class="nav-link active">Asym&eacute;trie ( gauche - droite)</a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+
+                <div class="tab-pane fade show active" id="BetaGauche">
+                <br>
+                <form action="{{ url_for('BetaGauche') }}" method="POST">
+                    <table class="TableCellule-table">
+                    <tr>
+                        <td class="TableCellule">a</td>
+                        <td class="TableCellule">
+                            <input id="parama" name="parama" type="text"></td>
+
+                        <td class="TableCellule">b</td>
+                        <td class="TableCellule">
+                            <input id="paramb" name="paramb" type="text"></td>
+                    </tr>
+
+                    <tr>
+                        <td class="TableCellule">\(\alpha\)</td>
+                        <td class="TableCellule">
+                            <input id="paramalpha" name="paramalpha" type="text"></td>
+
+                        <td class="TableCellule">\(\beta\)</td>
+                        <td class="TableCellule">
+                            <input id="parambeta" name="parambeta" type="text"></td>
+                    </tr>
+
+                    <tr>
+                        <td class="TableCellule">\(\lambda\)</td>
+                        <td class="TableCellule">
+                            <input id="paramlambda" name="paramlambda" type="text" placeholder="0.88"></td>
+                        <td class="TableCellule">
+                            <button type="submit" value="Tracer">Tracer</button>
+                        </td>
+                    </tr>
+                    </table>
+                </form>
+                </div>  <!-- Fin Gauche  -->
+
+            </div>
+
+            </div>  <!-- fin div  formulaire Beta -->
+
+        </div>  <!-- Fin Loi Beta -->
+
+
+        <!-- Loi Gamma -->
+        <div class="tab-pane fade" id="LoiGamma">
+            <br>
+            <h4 class="mt-2">Loi Gamma tronqu&eacute;e</h4>
+            <br>
+
+            <div class="m-4">  <!-- debut div formulaire Gamma -->
+
+            <ul class="nav nav-pills" id="myTab">
+                <li class="nav-item">
+                    <a href="#GammaGauche" class="nav-link active">Asym&eacute;trie ( gauche - droite)</a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+
+                <div class="tab-pane fade show active" id="GammaGauche"> <!-- Gauche  -->
+                <br>
+                <form action="{{ url_for('GammaGauche') }}" method="POST">
+                    <table class="TableCellule-table">
+                    <tr>
+                        <td class="TableCellule">a</td>
+                        <td class="TableCellule">
+                            <input id="parama" name="parama" type="text"></td>
+
+                        <td class="TableCellule">b</td>
+                        <td class="TableCellule">
+                            <input id="paramb" name="paramb" type="text"></td>
+                    </tr>
+
+                    <tr>
+                        <td class="TableCellule">\(\alpha\)</td>
+                        <td class="TableCellule">
+                            <input id="paramalpha" name="paramalpha" type="text"></td>
+
+                        <td class="TableCellule">\(\beta\)</td>
+                        <td class="TableCellule">
+                            <input id="parambeta" name="parambeta" type="text"></td>
+                    </tr>
+
+                    <tr>
+                        <td class="TableCellule">\(\lambda\)</td>
+                        <td class="TableCellule">
+                            <input id="paramlambda" name="paramlambda" type="text" placeholder="0.81"></td>
+                        <td class="TableCellule">
+                            <button type="submit" value="Tracer">Tracer</button>
+                        </td>
+                    </tr>
+                    </table>
+                </form>
+                </div>  <!-- Fin Gauche  -->
+
+            </div>
+
+            </div>  <!-- fin div  formulaire Gamma  -->
+
+        </div>  <!-- Fin Loi Gamma -->
+
+
+        <!-- Loi Weibull -->
+        <div class="tab-pane fade" id="LoiWeibull">
+            <br>
+            <h4 class="mt-2">Loi de Weibull tronqu&eacute;e</h4>
+            <br>
+
+            <div class="m-4">  <!-- debut div formulaire Weibull -->
+
+            <ul class="nav nav-pills" id="myTab">
+                <li class="nav-item">
+                    <a href="#WeibullGauche" class="nav-link active">Asym&eacute;trie ( gauche - droite)</a>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+
+                <div class="tab-pane fade show active" id="WeibullGauche">  <!-- Gauche  -->
+                <br>
+                <form action="{{ url_for('WeibullGauche') }}" method="POST">
+                    <table class="TableCellule-table">
+                    <tr>
+                        <td class="TableCellule">a</td>
+                        <td class="TableCellule">
+                            <input id="parama" name="parama" type="text"></td>
+
+                        <td class="TableCellule">b</td>
+                        <td class="TableCellule">
+                            <input id="paramb" name="paramb" type="text"></td>
+                    </tr>
+
+                    <tr>
+                        <td class="TableCellule">\(\alpha\)</td>
+                        <td class="TableCellule">
+                            <input id="paramalpha" name="paramalpha" type="text"></td>
+
+                        <td class="TableCellule">\(\beta\)</td>
+                        <td class="TableCellule">
+                            <input id="parambeta" name="parambeta" type="text"></td>
+                    </tr>
+
+                    <tr>
+                        <td class="TableCellule">\(\lambda\)</td>
+                        <td class="TableCellule">
+                            <input id="paramlambda" name="paramlambda" type="text" placeholder="0.925"></td>
+                        <td class="TableCellule">
+                            <button type="submit" value="Tracer">Tracer</button>
+                        </td>
+                    </tr>
+                    </table>
+                </form>
+                </div>
+
+            </div>
+
+            </div>  <!-- fin div  formulaire Weibull  -->
+
+        </div>  <!-- Fin Loi Weibull -->
+
+
+        <!-- Application -->
+        <div class="tab-pane fade" id="Application">
+            <h4 class="mt-2">Application</h4>
+
+            <br>
+            <p><b>S&eacute;lectionnez une ligne (Total = toutes les lignes ferroviaires du Transilien)</b></p>
+            <br>
+
+            <!--  Liste -->
+            {% if Liste_ligne %}
+            <div style="padding-top: 1em; width:500px;">
+                <table class="table">
+                    <form method="POST" action="{{ url_for('Transilien') }}">
+                        <tr>
+                            <td>
+                                <select name="ligne_select" class="form-select" aria-label="Default select example">
+                                    <option value=""> Ligne </option>
+                                    {% for o in Liste_ligne %}
+                                    <option value="{{ o }}">{{ o }}</option>
+                                    {% endfor %}
+                                </select>
+                            </td>
+                            <td>
+                                <button type="submit" class="btn btn-primary">Afficher</button>
+                            </td>
+                        </tr>
+                    </form>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+
+
+    </div>
+</div>
+
+</div>  <!-- /.main-content -->
+
+<!-- ===== Footer ===== -->
+<footer>
+    <div class="container">
+        Projet de mod&eacute;lisation du taux de r&eacute;gularit&eacute; Transilien &mdash;
+        <span class="author">Christophe DOS SANTOS FREIRE &amp; R&eacute;mi GUITTARD</span>
+    </div>
+</footer>
+<!-- ===== Overlay de chargement ===== -->
+<div id="loading-overlay">
+    <div class="loading-box">
+        <div class="spinner"></div>
+        <div class="progress-track">
+            <div class="progress-bar-anim"></div>
+        </div>
+        <div class="loading-text">Calcul en cours, veuillez patienter&hellip;</div>
+    </div>
+</div>
+
+<!-- ===== Script : afficher l'overlay a la soumission d'un formulaire ===== -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var overlay = document.getElementById('loading-overlay');
+    var formulaires = document.querySelectorAll('form');
+    formulaires.forEach(function (f) {
+        f.addEventListener('submit', function () {
+            overlay.style.display = 'block';
+        });
+    });
+});
+</script>
+</body>
+</html>

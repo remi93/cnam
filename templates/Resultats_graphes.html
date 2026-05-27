@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <title>Mod&eacute;lisation statistique - Trac&eacute;s</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel="icon" type="image/png" href="https://cdn.icon-icons.com/icons2/390/PNG/512/histogram_39554.png"/>
+
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap_V522.min.css') }}">
+
+  <script src="{{ url_for('static', filename='js/jquery-3.7.1.min.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/bootstrap_V502.bundle.min.js') }}"></script>
+
+  <script>
+  $(document).ready(function(){
+      $("#myTab a").click(function(e){
+          e.preventDefault();
+          $(this).tab("show");
+      });
+  });
+  </script>
+
+  <script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    jax: ["input/TeX", "output/HTML-CSS"],
+    extensions: ["tex2jax.js"],
+    "HTML-CSS": { preferredFont: "TeX", availableFonts: ["STIX","TeX"] },
+    tex2jax: { inlineMath: [ ["$", "$"], ["\\(","\\)"] ], displayMath: [ ["$$","$$"], ["\\[", "\\]"] ], processEscapes: true, ignoreClass: "tex2jax_ignore|dno" },
+    TeX: { noUndefined: { attributes: { mathcolor: "red", mathbackground: "#FFEEEE", mathsize: "90%" } } },
+    messageStyle: "none"
+  });
+  </script>
+
+  <!-- Pour formules maths -->
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=default'></script>
+
+  <style>
+    /* ===== Palette SNCF carmillon ===== */
+    :root {
+        --carmillon: #CD2027;
+        --carmillon-dark: #A6191F;
+        --carmillon-light: #FCE9EA;
+    }
+
+    body {
+        background-color: #f5f7fa;
+        font-family: 'Calibri', 'Verdana', 'Segoe UI', Tahoma, Geneva, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    p, h1, h2, h3, h4, h5, h6, div, span, td, th, label, button, input, select {
+        font-family: 'Calibri', 'Verdana', 'Segoe UI', Tahoma, Geneva, sans-serif !important;
+    }
+
+    /* ===== Bandeau logos du haut ===== */
+    .top-bar {
+        background: #fff;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 12px 0;
+    }
+    .top-bar .logo-img { height: 55px; width: auto; }
+    .top-bar .author-info { text-align: center; }
+    .top-bar .author-info .title {
+        font-size: 1rem;
+        color: var(--carmillon-dark);
+        font-weight: 700;
+        line-height: 1.2;
+    }
+    .top-bar .author-info .author {
+        font-size: 0.85rem;
+        color: #555;
+        margin-top: 3px;
+    }
+
+    /* ===== Navbar carmillon ===== */
+    .navbar-sncf {
+        background: linear-gradient(135deg, var(--carmillon-dark) 0%, var(--carmillon) 100%);
+        padding: 12px 0;
+    }
+    .navbar-sncf .navbar-brand {
+        color: #fff;
+        font-weight: 600;
+        font-size: 1.15rem;
+        padding-left: 15px;
+        text-decoration: none;
+    }
+
+    /* ===== Conteneur principal ===== */
+    .main-content {
+        background: #fff;
+        margin: 20px auto;
+        padding: 30px 35px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        max-width: 1400px;
+    }
+
+    h1 {
+        color: var(--carmillon-dark);
+        font-weight: 700;
+        font-size: 2rem;
+        margin-bottom: 20px;
+    }
+
+    /* ===== Bouton Index en haut a droite ===== */
+    .btn-retour {
+        background-color: var(--carmillon);
+        color: #fff !important;
+        text-decoration: none;
+        padding: 8px 22px;
+        font-weight: 600;
+        font-size: 1rem;
+        border-radius: 4px;
+        display: inline-block;
+        transition: background-color 0.15s;
+    }
+    .btn-retour:hover {
+        background-color: var(--carmillon-dark);
+        color: #fff !important;
+    }
+
+    /* ===== Sous-titres pour chaque loi ===== */
+    .titre-loi {
+        color: var(--carmillon-dark);
+        font-weight: 600;
+        font-size: 1.4rem;
+        padding: 12px 18px;
+        background-color: var(--carmillon-light);
+        border-left: 5px solid var(--carmillon);
+        border-radius: 4px;
+        margin-top: 30px;
+        margin-bottom: 20px;
+    }
+
+    /* ===== Conteneur graphique ===== */
+    .graphe-container {
+        display: inline-block;
+        width: 49%;
+        text-align: center;
+        padding: 10px;
+        vertical-align: top;
+    }
+    .graphe-container img {
+        max-width: 100%;
+        height: auto;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        background: #fff;
+        padding: 6px;
+    }
+    .graphe-container p {
+        text-align: center;
+        font-weight: 600;
+        color: var(--carmillon-dark);
+        margin-top: 10px;
+        font-size: 1rem;
+    }
+
+    /* ===== Footer ===== */
+    footer {
+        margin-top: 50px;
+        padding: 22px 0;
+        background: var(--carmillon-dark);
+        color: #ffd9d9;
+        text-align: center;
+        font-size: 0.9rem;
+    }
+    footer .author { color: #fff; font-weight: 600; }
+  </style>
+
+</head>
+<body>
+
+<!-- ===== Bandeau logos en haut ===== -->
+<div class="top-bar">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-4 text-start ps-4">
+                <img src="{{ url_for('static', filename='images/Logo_CNAM.png') }}"
+                     alt="Le Cnam - Ecole d'ingenieurs" class="logo-img">
+            </div>
+            <div class="col-4 author-info">
+                <div class="title">Mod&eacute;lisation du taux de r&eacute;gularit&eacute; Transilien</div>
+                <div class="author">Christophe DOS SANTOS FREIRE &amp; R&eacute;mi GUITTARD &mdash; Projet de modélisation du taux de régularité Transilien 2025-2026</div>
+            </div>
+            <div class="col-4 text-end pe-4">
+                <img src="{{ url_for('static', filename='images/Logo_SNCF.png') }}"
+                     alt="SNCF R&eacute;seau" class="logo-img">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Navbar carmillon ===== -->
+<nav class="navbar-sncf">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('index') }}">
+            &#128646; Ponctualit&eacute; mensuelle Transilien &mdash; Lois tronqu&eacute;es asym&eacute;triques
+        </a>
+    </div>
+</nav>
+
+<!-- ===== Contenu principal ===== -->
+<div class="main-content">
+
+<!-- Bouton retour Index a droite -->
+<div style="text-align: right; margin-bottom: 20px;">
+    <a href="{{ url_for('index') }}" class="btn-retour">&laquo; Retour &agrave; l'index</a>
+</div>
+
+
+<!-- Beta -->
+{% if result_BetaG %}
+<div>
+    <h1 class="titre-loi">{{Titre_Beta}}</h1>
+
+    <div class="graphe-container">
+        <img src="data:image/png;base64,{{result_BetaG}}" style="width:600px;">
+        <p>Asym&eacute;trie &agrave; gauche</p>
+    </div>
+
+    <div class="graphe-container">
+        <img src="data:image/png;base64,{{result_BetaD}}" style="width:600px;">
+        <p>Asym&eacute;trie &agrave; droite</p>
+    </div>
+</div>
+{% endif %}
+
+<!-- Gamma -->
+{% if result_GammaG %}
+<div>
+    <h1 class="titre-loi">{{Titre_Gamma}}</h1>
+
+    <div class="graphe-container">
+        <img src="data:image/png;base64,{{result_GammaG}}" style="width:600px;">
+        <p>Asym&eacute;trie &agrave; gauche</p>
+    </div>
+
+    <div class="graphe-container">
+        <img src="data:image/png;base64,{{result_GammaD}}" style="width:600px;">
+        <p>Asym&eacute;trie &agrave; droite</p>
+    </div>
+</div>
+{% endif %}
+
+<!--  Weibull -->
+{% if result_WeibullG %}
+<div>
+    <h1 class="titre-loi">{{Titre_Weibull}}</h1>
+
+    <div class="graphe-container">
+        <img src="data:image/png;base64,{{result_WeibullG}}" style="width:600px;">
+        <p>Asym&eacute;trie &agrave; gauche</p>
+    </div>
+
+    <div class="graphe-container">
+        <img src="data:image/png;base64,{{result_WeibullD}}" style="width:600px;">
+        <p>Asym&eacute;trie &agrave; droite</p>
+    </div>
+</div>
+{% endif %}
+
+<!--  Normale -->
+{% if result_NormaleG %}
+<div>
+    <h1 class="titre-loi">{{Titre_Normale}}</h1>
+
+    <div class="graphe-container">
+        <img src="data:image/png;base64,{{result_NormaleG}}" style="width:600px;">
+        <p>Asym&eacute;trie &agrave; gauche</p>
+    </div>
+
+    <div class="graphe-container">
+        <img src="data:image/png;base64,{{result_NormaleD}}" style="width:600px;">
+        <p>Asym&eacute;trie &agrave; droite</p>
+    </div>
+</div>
+{% endif %}
+
+<!--  Convolution Exponentielle -->
+{% if result_ConvExpG %}
+<div>
+    <h1 class="titre-loi">{{Titre_ConvExp}}</h1>
+
+    <div class="graphe-container">
+        <img src="data:image/png;base64,{{result_ConvExpG}}" style="width:600px;">
+        <p>Asym&eacute;trie &agrave; gauche</p>
+    </div>
+
+    <div class="graphe-container">
+        <img src="data:image/png;base64,{{result_ConvExpD}}" style="width:600px;">
+        <p>Asym&eacute;trie &agrave; droite</p>
+    </div>
+</div>
+{% endif %}
+
+<!--  Hyper Exponentielle -->
+{% if result_HyperExpG %}
+<div>
+    <h1 class="titre-loi">{{Titre_HyperExp}}</h1>
+
+    <div class="graphe-container">
+        <img src="data:image/png;base64,{{result_HyperExpG}}" style="width:600px;">
+        <p>Asym&eacute;trie &agrave; gauche</p>
+    </div>
+
+    <div class="graphe-container">
+        <img src="data:image/png;base64,{{result_HyperExpD}}" style="width:600px;">
+        <p>Asym&eacute;trie &agrave; droite</p>
+    </div>
+</div>
+{% endif %}
+
+</div>  <!-- /.main-content -->
+
+<!-- ===== Footer ===== -->
+<footer>
+    <div class="container">
+        Projet de modélisation du taux de régularité Transilien 2025-2026 &mdash; Mod&eacute;lisation du taux de r&eacute;gularit&eacute; Transilien &mdash;
+        <span class="author">Christophe DOS SANTOS FREIRE &amp; R&eacute;mi GUITTARD</span>
+    </div>
+</footer>
+
+</body>
+</html>
