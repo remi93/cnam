@@ -270,8 +270,12 @@
         <li><a data-toggle="pill" href="#Histo">Histogramme</a></li>
         <li><a data-toggle="pill" href="#Estimation">Estimation</a></li>
 
-        <li class=" navbar-right">
-            <button type="button" class="btn btn-dark" onclick="window.location='{{ url_for('Transilien') }}';">Application</button>
+        <li class="navbar-right">
+            <button type="button" class="btn btn-dark" onclick="window.location='{{ url_for('Transilien') }}';" style="margin-left: 10px;">S&eacute;lection des lignes</button>
+        </li>
+        
+        <li class="navbar-right">
+            <button type="button" class="btn btn-dark" onclick="window.location='{{ url_for('index') }}';">&laquo; Accueil</button>
         </li>
 
     </ul>
@@ -410,8 +414,9 @@
 <!-- ===== Footer ===== -->
 <footer>
     <div class="container">
-        Grand Projet 2025-2026 &mdash; Mod&eacute;lisation du taux de r&eacute;gularit&eacute; Transilien &mdash;
+        Projet de mod&eacute;lisation du taux de r&eacute;gularit&eacute; Transilien (Grand Projet 2025-2026) &mdash; 
         <span class="author">Christophe DOS SANTOS FREIRE &amp; R&eacute;mi GUITTARD</span>
+        <p style="font-size: 13pt; margin-top: 8px; color: #fff;">Formation : Dipl&ocirc;me d'ing&eacute;nieur Sp&eacute;cialit&eacute; syst&egrave;mes &eacute;lectroniques parcours Signalisation ferroviaire en apprentissage (CNAM)</p>
     </div>
 </footer>
 
