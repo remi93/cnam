@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <title>Mod&eacute;lisation statistique - R&eacute;sultats Application</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link rel='shortcut icon' href='https://img.magnific.com/photos-premium/pi-numero-or-symbole-mathematique-illustration-rendu-3d_585146-117.jpg'/>
+
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap_V336.min.css') }}">
+
+  <script>
+  $(document).ready(function(){
+      $("#myTab a").click(function(e){
+          e.preventDefault();
+          $(this).tab("show");
+      });
+  });
+  </script>
+
+  <script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    jax: ["input/TeX", "output/HTML-CSS"],
+    extensions: ["tex2jax.js"],
+    "HTML-CSS": { preferredFont: "TeX", availableFonts: ["STIX","TeX"] },
+    tex2jax: { inlineMath: [ ["$", "$"], ["\\(","\\)"] ], displayMath: [ ["$$","$$"], ["\\[", "\\]"] ], processEscapes: true, ignoreClass: "tex2jax_ignore|dno" },
+    TeX: { noUndefined: { attributes: { mathcolor: "red", mathbackground: "#FFEEEE", mathsize: "90%" } } },
+    messageStyle: "none"
+  });
+  </script>
+
+  <!-- Pour formules maths -->
+  <script src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=default'></script>
+
+  <style>
+    /* ===== Palette SNCF carmillon ===== */
+    :root {
+        --carmillon: #CD2027;
+        --carmillon-dark: #A6191F;
+        --carmillon-light: #FCE9EA;
+    }
+
+    body {
+        background-color: #f5f7fa;
+        font-family: 'Calibri', 'Verdana', 'Segoe UI', Tahoma, Geneva, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+
+    p, h1, h2, h3, h4, h5, h6, div, span, td, th, label, button, input, select, caption {
+        font-family: 'Calibri', 'Verdana', 'Segoe UI', Tahoma, Geneva, sans-serif !important;
+    }
+
+    /* ===== Bandeau logos du haut ===== */
+    .top-bar {
+        background: #fff;
+        border-bottom: 1px solid #e0e0e0;
+        padding: 12px 0;
+    }
+    .top-bar .logo-img { height: 55px; width: auto; }
+    .top-bar .author-info { text-align: center; }
+    .top-bar .author-info .title {
+        font-size: 1rem;
+        color: var(--carmillon-dark);
+        font-weight: 700;
+        line-height: 1.2;
+    }
+    .top-bar .author-info .author {
+        font-size: 0.85rem;
+        color: #555;
+        margin-top: 3px;
+    }
+
+    /* ===== Navbar carmillon ===== */
+    .navbar-sncf {
+        background: linear-gradient(135deg, var(--carmillon-dark) 0%, var(--carmillon) 100%);
+        padding: 12px 0;
+        color: #fff;
+    }
+    .navbar-sncf .navbar-brand {
+        color: #fff;
+        font-weight: 600;
+        font-size: 1.15rem;
+        padding-left: 15px;
+        text-decoration: none;
+    }
+
+    /* ===== Conteneur principal ===== */
+    .main-content {
+        background: #fff;
+        margin: 20px auto;
+        padding: 30px 35px;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        max-width: 1400px;
+    }
+
+    h1, h2 {
+        color: var(--carmillon-dark);
+        font-weight: 700;
+    }
+    h2 {
+        font-size: 1.7rem;
+        margin-top: 5px;
+    }
+    h4 {
+        color: var(--carmillon-dark);
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+
+    /* ===== Onglets (nav-pills version Bootstrap 3) ===== */
+    .nav-pills > li > a {
+        color: #555;
+        font-weight: 500;
+        border-radius: 6px;
+        padding: 10px 18px;
+        transition: all 0.15s;
+    }
+    .nav-pills > li > a:hover {
+        background-color: var(--carmillon-light);
+        color: var(--carmillon-dark);
+    }
+    .nav-pills > li.active > a,
+    .nav-pills > li.active > a:focus,
+    .nav-pills > li.active > a:hover {
+        background-color: var(--carmillon) !important;
+        color: #fff !important;
+    }
+
+    /* ===== Bouton "Application" en haut a droite des onglets ===== */
+    .btn-dark {
+        background-color: var(--carmillon-dark);
+        border-color: var(--carmillon-dark);
+        color: #fff;
+        font-weight: 500;
+    }
+    .btn-dark:hover, .btn-dark:focus {
+        background-color: #8d1418;
+        border-color: #8d1418;
+        color: #fff;
+    }
+
+    /* ===== Caption (legende) des tables ===== */
+    table caption {
+        color: var(--carmillon-dark);
+        font-weight: 600;
+        font-size: 1.1rem;
+        padding: 10px 0;
+        caption-side: top;
+        text-align: left;
+    }
+
+    /* ===== Headers de tables ===== */
+    .table > thead > tr > th {
+        background-color: var(--carmillon-light);
+        color: var(--carmillon-dark);
+        font-weight: 600;
+        border-bottom: 2px solid var(--carmillon);
+    }
+    .table-hover > tbody > tr:hover > td {
+        background-color: var(--carmillon-light);
+    }
+
+    /* ===== Tableau resultat estimation (tableMain du prof) ===== */
+    .TableCellule {
+        border: 1px solid black;
+        border-collapse: collapse;
+        padding: 15px;
+        font-size: 20px;
+    }
+
+    .tableMain {
+        display: table;
+        width: 100%;
+        background-color: #fafafa;
+        border-radius: 6px;
+        overflow: hidden;
+    }
+    .tableRow { display: table-row; }
+    .tableCell, .tableHead {
+        border: 1px solid #fff;
+        display: table-cell;
+        padding: 20px 18px 35px;
+        vertical-align: top;
+    }
+    .tableRow:nth-child(odd) .tableCell {
+        background-color: #f7f3f3;
+    }
+    .tableRow:nth-child(even) .tableCell {
+        background-color: #fffefe;
+    }
+    .tableHeading {
+        display: table-header-group;
+        font-weight: bold;
+    }
+    .tableBodyA { display: table-row-group; }
+
+    /* Images des graphiques */
+    .tableCell img {
+        max-width: 100%;
+        height: auto;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: #fff;
+        padding: 4px;
+    }
+
+    .pfont1 { font-size: 15pt; font-weight: bold; }
+    .pfont2 { font-size: 13pt; }
+
+    /* ===== Footer ===== */
+    footer {
+        margin-top: 50px;
+        padding: 22px 0;
+        background: var(--carmillon-dark);
+        color: #ffd9d9;
+        text-align: center;
+        font-size: 0.9rem;
+    }
+    footer .author { color: #fff; font-weight: 600; }
+  </style>
+
+</head>
+<body>
+
+<!-- ===== Bandeau logos en haut ===== -->
+<div class="top-bar">
+    <div class="container-fluid">
+        <div class="row align-items-center">
+            <div class="col-xs-4 text-left" style="padding-left: 25px;">
+                <img src="{{ url_for('static', filename='images/Logo_CNAM.png') }}"
+                     alt="Le Cnam - Ecole d'ingenieurs" class="logo-img">
+            </div>
+            <div class="col-xs-4 author-info text-center">
+                <div class="title">Mod&eacute;lisation du taux de r&eacute;gularit&eacute; Transilien</div>
+                <div class="author">Christophe DOS SANTOS FREIRE &amp; R&eacute;mi GUITTARD &mdash; Grand Projet 2025-2026</div>
+            </div>
+            <div class="col-xs-4 text-right" style="padding-right: 25px;">
+                <img src="{{ url_for('static', filename='images/Logo_SNCF.png') }}"
+                     alt="SNCF R&eacute;seau" class="logo-img">
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== Navbar carmillon ===== -->
+<nav class="navbar-sncf">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{{ url_for('index') }}">
+            &#128646; Ponctualit&eacute; mensuelle Transilien &mdash; Lois tronqu&eacute;es asym&eacute;triques
+        </a>
+    </div>
+</nav>
+
+<!-- ===== Contenu principal ===== -->
+<div class="main-content">
+
+<h1>Mod&eacute;lisation du taux de r&eacute;gularit&eacute;</h1>
+
+
+{% if choix %}
+
+<div class="container-fluid">
+    <h2>{{choix}}</h2>
+    <ul class="nav nav-pills">
+
+        <li class="active"><a data-toggle="pill" href="#StatsD">Table des statistiques</a></li>
+
+        <li><a data-toggle="pill" href="#Histo">Histogramme</a></li>
+        <li><a data-toggle="pill" href="#Estimation">Estimation</a></li>
+
+        <li class="navbar-right">
+            <button type="button" class="btn btn-dark" onclick="window.location='{{ url_for('index') }}';">&laquo; Accueil</button>
+        </li>
+
+    </ul>
+
+
+    <div class="tab-content">
+        <div id="StatsD" class="tab-pane fade in active" style="padding:50px;">
+            <!-- Table  -->
+            <table class="table table-hover">
+                <caption>Table des statistiques descriptives</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Statistiques</th>
+                        <th scope="col">Valeurs</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for cle, valeur in Stats_html.items() %}
+                    <tr>
+                        <td>{{cle}}</td>
+                        <td>{{valeur}}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <!-- Fin Table  -->
+        </div>
+
+
+        <!-- Histo -->
+        <div id="Histo" class="tab-pane fade" style="padding:20px;">
+            <img src="data:image/png;base64, {{ histo_html }}" width="700" height="550" style="display: block; margin: auto;">
+        </div>
+
+        <!-- Estimation -->
+        <div id="Estimation" class="tab-pane fade" style="padding:20px;">
+
+            <!-- Resultats d'Estimation -->
+            <div class="tableMain">
+                <div class="tableBodyA">
+
+                    <!--  1ere ligne -->
+                    <div class="tableRow">
+                        <div class="tableCell">
+                            <h4>Ajustement des donn&eacute;es par une loi Beta tronqu&eacute;e</h4>
+                            <img src="data:image/png;base64,{{img_Beta_D}}" style="width:600px;">
+                        </div>
+                        <div class="tableCell">
+                            <h4>Tableau des irr&eacute;gularit&eacute;s estim&eacute;es pour diff&eacute;rents seuils.</h4>
+                            <table class="table table-hover table-bordered w-50">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">seuils</th>
+                                        <th scope="col">$\displaystyle \mathbb{P}(R\acute{e}gularit\acute{e} \leq seuil)$</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for cle, valeur in Irg_Beta_D.items() %}
+                                    <tr>
+                                        <td>{{cle}}</td>
+                                        <td>{{valeur}}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!--  2eme ligne -->
+                    <div class="tableRow">
+                        <div class="tableCell">
+                            <h4>Ajustement des donn&eacute;es par une loi Gamma tronqu&eacute;e</h4>
+                            <img src="data:image/png;base64,{{img_Gamma_D}}" style="width:600px;">
+                        </div>
+                        <div class="tableCell">
+                            <h4>Tableau des irr&eacute;gularit&eacute;s estim&eacute;es pour diff&eacute;rents seuils.</h4>
+                            <table class="table table-hover table-bordered w-50">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">seuils</th>
+                                        <th scope="col">$\displaystyle \mathbb{P}(R\acute{e}gularit\acute{e} \leq seuil)$</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for cle, valeur in Irg_Gamma_D.items() %}
+                                    <tr>
+                                        <td>{{cle}}</td>
+                                        <td>{{valeur}}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!--  3eme ligne -->
+                    <div class="tableRow">
+                        <div class="tableCell">
+                            <h4>Ajustement des donn&eacute;es par une loi Weibull tronqu&eacute;e</h4>
+                            <img src="data:image/png;base64,{{img_weibull_D}}" style="width:600px;">
+                        </div>
+                        <div class="tableCell">
+                            <h4>Tableau des irr&eacute;gularit&eacute;s estim&eacute;es pour diff&eacute;rents seuils.</h4>
+                            <table class="table table-hover table-bordered w-50">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">seuils</th>
+                                        <th scope="col">$\displaystyle \mathbb{P}(R\acute{e}gularit\acute{e} \leq seuil)$</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for cle, valeur in Irg_Weibull_D.items() %}
+                                    <tr>
+                                        <td>{{cle}}</td>
+                                        <td>{{valeur}}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!--  Fin 3eme ligne -->
+
+                </div>
+            </div>
+        </div>
+        <!-- Fin Resultats d'Estimation-->
+
+    </div>
+</div>
+
+{% endif %}
+
+</div>  <!-- /.main-content -->
+
+<!-- ===== Footer ===== -->
+<footer>
+    <div class="container">
+        Projet de mod&eacute;lisation du taux de r&eacute;gularit&eacute; Transilien (Grand Projet 2025-2026) &mdash; 
+        <span class="author">Christophe DOS SANTOS FREIRE &amp; R&eacute;mi GUITTARD</span>
+        <p style="font-size: 13pt; margin-top: 8px; color: #fff;">Formation : Dipl&ocirc;me d'ing&eacute;nieur Sp&eacute;cialit&eacute; syst&egrave;mes &eacute;lectroniques parcours Signalisation ferroviaire en apprentissage (CNAM)</p>
+    </div>
+</footer>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.0/jquery.min.js"></script>
+<!-- <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script> -->
+<script src="{{ url_for('static', filename='js/bootstrap_v336.min.js') }}"></script>
+
+</body>
+</html>
